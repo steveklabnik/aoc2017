@@ -10,22 +10,9 @@ pub extern fn sum(s: *mut c_char) -> u32 {
 
     let s = s.to_str().unwrap();
 
-    let mut sum = 0;
     let bytes = s.as_bytes();
 
-    for (idx, &c) in bytes.iter().enumerate() {
-        let second_index = (idx + 1) % bytes.len();
-
-        // convert bytes to digits
-        let num = c - 48;
-        let second_num = bytes[second_index] - 48;
-
-        if num == second_num {
-            sum += num as u32;
-        }
-    }
-
-    sum
+    calculate(bytes, 1)
 }
 
 #[no_mangle]
@@ -36,12 +23,17 @@ pub extern fn second_sum(s: *mut c_char) -> u32 {
 
     let s = s.to_str().unwrap();
 
-    let mut sum = 0;
     let bytes = s.as_bytes();
     let halfway = bytes.len() / 2;
 
+    calculate(bytes, halfway)
+}
+
+fn calculate(bytes: &[u8], offset: usize) -> u32 {
+    let mut sum = 0;
+
     for (idx, &c) in bytes.iter().enumerate() {
-        let second_index = (idx + halfway) % bytes.len();
+        let second_index = (idx + offset) % bytes.len();
 
         // convert bytes to digits
         let num = c - 48;
