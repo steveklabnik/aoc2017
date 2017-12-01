@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Advent of Code in Rust and Wasm: Day 1</title>
+  <script>
+    function fetchAndInstantiate(url, importObject) {
+      return fetch(url).then(response =>
+        response.arrayBuffer()
+      ).then(bytes =>
+        WebAssembly.instantiate(bytes, importObject)
+        ).then(results =>
+          results.instance
+        );
+    }
+
+    function newString(module, str) {
+      const utf8Encoder = new TextEncoder("UTF-8");
+      let string_buffer = utf8Encoder.encode(str)
+      let len = string_buffer.length
+      let ptr = module.alloc(len)
+
+      let memory = new Uint8Array(module.memory.buffer);
+      for (i = 0; i < len; i++) {
+        memory[ptr + i] = string_buffer[i]
+      }
+
+      memory[ptr + len] = 0;
+
+      return ptr
+    }
+    window.Module = {}
+    fetchAndInstantiate("target/wasm32-unknown-unknown/release/day01.wasm", {})
+      .then(mod => {
+        Module.alloc = mod.exports.alloc;
+        Module.dealloc = mod.exports.dealloc;
+        Module.memory = mod.exports.memory;
+        Module.sum = mod.exports.sum;
+
+        var captcha = document.getElementById("captcha");
+        document.getElementById("calculate").addEventListener("submit", e => {
+          // we don't want to submit the form
+          e.preventDefault();
+
+          let value = newString(Module, captcha.value);
+
+          let sum = Module.sum(value);
+          var answer = document.getElementById("answer");
+          answer.textContent = sum;
+
+          Module.dealloc(value);
+        });
+      });
+  </script>
+  <style>
+    li.matches {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1><a href="http://adventofcode.com/2017/">Advent of Code 2017</a> in Rust and WebAssembly!</h1>
+  <p>This is Day 1. You can also <a href="../index.html">go back to all the days</a>.</p>
+  <form id="calculate">
+  <fieldset>
+      <legend>Day 01</legend>
+      <table>
+        <tr>
+          <td><label for="captcha">Captcha</label></td>
+          <td><input type="text" id="captcha" name="captcha" /></td>
+        </tr>
+        <tr>
+          <td><button>Enter</button></td><td></td>
+        </tr>
+      </table>
+  </fieldset>
+  </form>
+  <p>Answer: <span id="answer"></span></p>
+</body>
+</html>
