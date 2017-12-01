@@ -19,3 +19,7 @@ your platform triple. For example, mine is:
 ```
 > cargo test --target=x86_64-pc-windows-msvc
 ```
+
+## Note on size
+
+You'll probably want to run the wasm through `wasm-gc` and `wasm-opt -Oz` to get a reasonable filesize.
