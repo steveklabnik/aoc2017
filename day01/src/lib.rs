@@ -28,6 +28,33 @@ pub extern fn sum(s: *mut c_char) -> u32 {
     sum
 }
 
+#[no_mangle]
+pub extern fn second_sum(s: *mut c_char) -> u32 {
+    let s = unsafe {
+        CStr::from_ptr(s)
+    };
+
+    let s = s.to_str().unwrap();
+
+    let mut sum = 0;
+    let bytes = s.as_bytes();
+    let halfway = bytes.len() / 2;
+
+    for (idx, &c) in bytes.iter().enumerate() {
+        let second_index = (idx + halfway) % bytes.len();
+
+        // convert bytes to digits
+        let num = c - 48;
+        let second_num = bytes[second_index] - 48;
+
+        if num == second_num {
+            sum += num as u32;
+        }
+    }
+
+    sum
+}
+
 // magic wasm shenanigans
 
 #[no_mangle]
@@ -50,6 +77,7 @@ mod tests {
     // these are going to leak but it's tests so I don't care
     use std::ffi::CString;
     use super::sum;
+    use super::second_sum;
 
     #[test]
     fn first() {
@@ -77,6 +105,41 @@ mod tests {
         let s = CString::new("91212129").unwrap().into_raw();
 
         assert_eq!(sum(s), 9);
+    }
+
+    #[test]
+    fn second_first() {
+        let s = CString::new("1212").unwrap().into_raw();
+
+        assert_eq!(second_sum(s), 6);
+    }
+
+    #[test]
+    fn second_second() {
+        let s = CString::new("1221").unwrap().into_raw();
+
+        assert_eq!(second_sum(s), 0);
+    }
+
+    #[test]
+    fn second_third() {
+        let s = CString::new("123425").unwrap().into_raw();
+
+        assert_eq!(second_sum(s), 4);
+    }
+
+    #[test]
+    fn second_fourth() {
+        let s = CString::new("123123").unwrap().into_raw();
+
+        assert_eq!(second_sum(s), 12);
+    }
+
+    #[test]
+    fn second_fifth() {
+        let s = CString::new("12131415").unwrap().into_raw();
+
+        assert_eq!(second_sum(s), 4);
     }
 }
 
